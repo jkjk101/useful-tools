@@ -1,0 +1,113 @@
+A. On the server with internet access, you can use the following command to save the iptables rules:
+1. Enable IP Forwarding on Server A (with internet interface)
+sudo nano /etc/sysctl.conf
+
+uncomment the following:
+net.ipv4.ip_forward=1
+
+sudo sysctl -p
+
+2. Configure NAT with iptables on Server A
+sudo iptables -t nat -A POSTROUTING -o <internet-interface> -j MASQUERADE
+sudo iptables -A FORWARD -i <internal-interface> -o <internet-interface> -j ACCEPT
+sudo iptables -A FORWARD -i <internet-interface> -o <internal-interface> -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+3. Save iptables rules
+sudo apt-get install iptables-persistent netfilter-persistent
+sudo iptables-save | sudo tee /etc/iptables/rules.v4
+
+verify:
+sudo iptables -t nat -L POSTROUTING -n -v
+output:
+ ...  ...  MASQUERADE  all  --  *      <internet-interface>  0.0.0.0/0          0.0.0.0/0
+
+sudo iptables -L FORWARD -n -v
+output:
+ ...  ...  ACCEPT     all  --  <internal-interface> <internet-interface>  0.0.0.0/0          0.0.0.0/0
+ ...  ...  ACCEPT     all  --  <internet-interface> <internal-interface>  0.0.0.0/0          0.0.0.0/0
+
+delete rules:
+replace -A by -D
+
+B. On the server without internet access (Server B):
+4. Configure Server B (connected to the same local network as Server A)
+sudo nano /etc/netplan/01-netcfg.yaml
+
+network:
+  version: 2
+  ethernets:
+    eno2:
+      dhcp4: no
+      addresses:
+        - 192.168.1.10x/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 192.168.1.103
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+
+sudo chmod 600 /etc/netplan/01-netcfg.yaml
+sudo chmod 600 /etc/netplan/01-network-manager-all.yaml
+
+sudo netplan apply
+*netplan config persists across reboots
+
+5. Test the configuration
+ping 8.8.8.8
+ping google.com
+telnet 42.200.145.45 47000
+
+DO2 (intranet proxy):
+(no internet access)
+network:
+  version: 2
+  ethernets:
+    eno1:
+      dhcp4: no
+      addresses:
+        - 10.13.135.20/26
+      routes:
+        - to: 0.0.0.0/0
+          via: 10.13.135.1
+          metric: 100
+    eno2:
+      dhcp4: no
+      addresses:
+        - 192.168.1.102/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 192.168.1.1
+          metric: 200
+
+With internet access:
+(nc -zv 192.168.1.102 80 filtered http?)
+
+network:
+version: 2
+ethernets:
+  eno1:
+    dhcp4: no
+    addresses:
+      - 10.13.135.20/26
+    routes:
+      - to: 10.0.0.0/8
+        via: 10.13.135.1
+        metric: 100
+    nameservers:
+      addresses:
+        - 10.13.135.85
+        - 10.13.135.99
+  eno2:
+    dhcp4: no
+    addresses:
+      - 192.168.1.102/24
+    routes:
+      - to: 0.0.0.0/0
+        via: 192.168.1.103
+        metric: 200
+    nameservers:
+      addresses:
+        - 8.8.8.8
+        - 8.8.4.4

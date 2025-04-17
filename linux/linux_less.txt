@@ -1,0 +1,5 @@
+/search_term
+[enter] to search for the first occurrence
+[n] to the next occurrence
+[N] to the previous occurrence
+[q] to quit
