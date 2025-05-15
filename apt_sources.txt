@@ -1,0 +1,4 @@
+sudo nano /etc/apt/sources.list
+    OR
+ls /etc/apt/sources.list.d/
+sudo rm /etc/apt/sources.list.d/google-chrome.list

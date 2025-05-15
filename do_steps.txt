@@ -1,0 +1,12 @@
+1. setup internet netplan
+2. delete problematic google chrome apt sources
+3. run sudo apt update
+4. remove services
+5. add user to docker group
+6. remove docker container and images
+7. remove do nginx
+8. check /data and ~ directories
+    - remove do-asp, DO, do_crawlers, venv, etc
+    - ls -l ~
+    - sudo rm -rfv do-asp do_crawl*
+    - ls -l /data

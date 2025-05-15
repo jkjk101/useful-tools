@@ -1,0 +1,16 @@
+sudo systemctl stop service
+sudo systemctl disable service
+sudo rm /etc/systemd/system/servicefile.service
+sudo systemctl daemon-reload
+sudo systemctl reset-failed
+systemctl list-units --type=service
+ls -l /etc/systemd/system/
+
+
+example:
+sudo systemctl stop server_sync_* do
+sudo systemctl disable server_sync_* do
+sudo rm -fv /etc/systemd/system/server_sync_* /etc/systemd/system/do*
+sudo systemctl daemon-reload
+systemctl list-units --type=service
+sudo systemctl reset-failed
