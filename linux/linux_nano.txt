@@ -1,0 +1,12 @@
+Ctrl + W: initiate search
+Ctrl + \: search and replace 
+Y: replace current instance
+N: skip
+A: replace all
+Ctrl + C: cancel
+Ctrl + O: save
+Ctrl + X: exit
+Ctrl + ^: set mark (move arrow to highlight text)
+Alt + 6: copy
+Ctrl + K: cut
+Ctrl + U: paste
