@@ -30,3 +30,5 @@ docker compose up -d
 # compose down
 docker compose down
 
+# find compose files of containers
+docker compose ls
