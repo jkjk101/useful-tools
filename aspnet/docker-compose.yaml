@@ -1,0 +1,53 @@
+services:
+  asp_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: dotnet_debug_container
+    ports:
+      - "1234:1234"
+    volumes:
+      - .:/src
+      - ./temp/mounts:/home/risksis/Projects/1_DO
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    # Critical for Debugging:
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+  
+  asp_publish:
+    image: dotnet_sdk_8:20260102
+    volumes:
+      - .:/workspace
+      # Mount the host SSH folder to a temporary location
+      - ~/.ssh:/root/.ssh_host:ro
+    network_mode: host
+    working_dir: /workspace
+    command: >
+      sh -c "mkdir -p /root/.ssh && 
+             cp -r /root/.ssh_host/* /root/.ssh/ && 
+             chmod 700 /root/.ssh && 
+             chmod 600 /root/.ssh/* && 
+             ./publish.sh"
+    profiles:
+      - publish
+
+  asp_add_migration:
+    image: dotnet_sdk_8:20260102
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: ./migration.sh
+    profiles:
+      - add_migration
+
+  asp_update_database:
+    image: dotnet_sdk_8:20260102
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: dotnet ef database update
+    profiles:
+      - update_database

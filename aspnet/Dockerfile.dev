@@ -1,0 +1,31 @@
+# Use the full SDK for development
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS dev
+WORKDIR /src
+
+# Enable polling so Docker detects file changes on Windows/Mac hosts
+ENV DOTNET_USE_POLLING_FILE_WATCHER=1
+# Ensure the app binds to all interfaces inside the container
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Copy only project files first for caching
+COPY *.csproj ./
+RUN dotnet restore
+
+# We don't COPY the rest of the code here; 
+# we'll use a volume in docker-compose.
+
+# We use a volume in docker-compose for the rest, 
+# but we need to ensure permissions are correct
+USER root
+
+# Install dependencies and VSDBG
+RUN apt-get update && apt-get install -y curl unzip \
+    && mkdir -p /remote_debugger \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /remote_debugger \
+    && chmod +x /remote_debugger/vsdbg
+
+# Ensure the path is in the system PATH (optional but helpful)
+ENV PATH="$PATH:/remote_debugger"
+
+# Use 'dotnet watch' to enable Hot Reload
+ENTRYPOINT ["dotnet", "watch", "run", "--non-interactive"]
